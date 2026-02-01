@@ -148,6 +148,7 @@ docs: update contributing guide
 ### C# Style
 
 - Follow [Microsoft C# Coding Conventions](https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/coding-style/coding-conventions)
+- **One type per file** - Each class, interface, record, or enum should be in its own file
 - Use C# 13 features where appropriate
 - Use `required` for mandatory DI properties
 - Prefer primary constructors for simple classes
@@ -157,6 +158,7 @@ docs: update contributing guide
 ### Project-Specific Guidelines
 
 **Abstractions (Aide.Core/Abstractions):**
+- One type per file (e.g., `ICapability.cs`, `CapabilityContext.cs`, `CapabilityResult.cs`)
 - Keep interfaces minimal and focused
 - Use records for DTOs and immutable types
 - Document public APIs with XML comments
@@ -183,6 +185,60 @@ docs: update contributing guide
 - Use MudBlazor components for consistency
 - Apply Tailwind CSS utility classes
 - Implement `IDisposable` for event subscriptions
+
+## Code Quality and Analyzers
+
+Before submitting a PR, ensure your code passes all quality checks:
+
+### 1. Format Code
+
+Run `dotnet format` to automatically fix formatting issues:
+
+```bash
+# Check for formatting issues
+dotnet format Aide.slnx --verify-no-changes
+
+# Apply formatting fixes
+dotnet format Aide.slnx
+```
+
+### 2. Address Roslyn Analyzer Suggestions
+
+The project uses Roslyn analyzers to enforce code quality. Address all analyzer hints, warnings, and errors:
+
+**Common Roslyn Suggestions:**
+- Use collection expressions: `[]` instead of `new List<>()`
+- Use `System.Threading.Lock` instead of `object` for lock fields (in .NET 10+)
+- Mark fields as `readonly` when they're not modified after initialization
+- Remove unnecessary using directives
+- Simplify LINQ expressions where possible
+
+**Check Diagnostics in IDE:**
+- Visual Studio: View > Error List
+- VS Code: Problems panel (Ctrl+Shift+M / Cmd+Shift+M)
+- Rider: Alt+6 (Problems tool window)
+
+**Build with Code Analysis:**
+
+```bash
+# Build with code style enforcement
+dotnet build Aide.slnx /p:EnforceCodeStyleInBuild=true
+
+# Should output: 0 Warning(s), 0 Error(s)
+```
+
+### 3. Best Practices Checklist
+
+Before submitting, verify your code follows these patterns:
+
+- ✅ Collection expressions: `private readonly List<string> _items = [];`
+- ✅ Modern lock type: `private readonly Lock _lock = new();`
+- ✅ File-scoped namespaces: `namespace Aide.Core.Services;`
+- ✅ Primary constructors for simple classes
+- ✅ Required properties for DI: `public required ILogger Logger { get; init; }`
+- ✅ XML documentation on public APIs
+- ✅ Proper async/await patterns (no `async void` except event handlers)
+- ✅ No compiler warnings or analyzer violations
 
 ## Testing
 

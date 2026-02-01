@@ -25,6 +25,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Aide.Core\Aide.Core.csproj" />
+    <ProjectReference Include="..\..\src\Aide.Capabilities\Aide.Capabilities.csproj" />
   </ItemGroup>
 
 </Project>

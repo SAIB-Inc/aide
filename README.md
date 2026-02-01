@@ -31,6 +31,10 @@ Aide is built as a **capability runtime** rather than a monolithic application:
 - **Capability System** - Dual plugin architecture:
   - **Native C# Plugins** - High-performance compiled capabilities for .NET developers (MVP)
   - **MCP Capabilities** - Leverage 100+ existing Model Context Protocol integrations (Planned)
+- **Background Task Queue** - Execute long-running operations asynchronously
+  - In-memory queue for MVP
+  - Support for scheduled/recurring tasks (Post-MVP)
+  - Task status tracking and cancellation
 - **Memory Service** - Advanced context persistence using PostgreSQL + Vector DB
 - **Security Layer** - Plugin sandboxing, permission model, and audit logging
 - **Audit System** - Comprehensive logging of all LLM actions, tool calls, and results
@@ -48,6 +52,7 @@ Communication capabilities (via MCP or native plugins):
 
 Intelligence capabilities:
 - **Task Management** - Create, track, and complete tasks
+- **Background Operations** - Long-running tasks, scheduled monitoring, async processing
 - **Smart Filtering** - Spam detection and priority routing
 - **Context Analysis** - Message categorization and insights
 - **Automation** - Custom workflows and batch operations
@@ -168,8 +173,9 @@ Aide/
 **Goal:** Working AI agent with Claude integration, sample capabilities, and audit logging
 
 - [ ] Solution and project structure setup
-- [ ] Core abstractions (`ICapability`, `ILlmProvider`)
+- [ ] Core abstractions (`ICapability`, `ILlmProvider`, `IBackgroundTask`)
 - [ ] Capability registry and LLM orchestrator
+- [ ] Background task queue (simple in-memory implementation)
 - [ ] Claude provider implementation
 - [ ] Audit logging service
 - [ ] Sample capabilities (Hello World, System Info)
@@ -210,7 +216,14 @@ Aide/
 - [ ] OpenAI Whisper STT integration
 - [ ] Voice UI in MAUI app
 
-**Phase 8.6: Advanced Features**
+**Phase 8.6: Advanced Task Scheduling**
+- [ ] Persistent task storage (PostgreSQL)
+- [ ] Cron-based scheduling (Hangfire or Quartz.NET)
+- [ ] Recurring task management
+- [ ] Task history and results
+- [ ] UI for managing scheduled tasks
+
+**Phase 8.7: Advanced Features**
 - [ ] PostgreSQL + EF Core integration
 - [ ] Vector database for semantic memory
 - [ ] Multi-user support and authentication

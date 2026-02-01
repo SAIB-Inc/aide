@@ -24,14 +24,14 @@ Build a minimal viable AI agent runtime with:
 ## Phase 1: Project Foundation
 
 ### 1.1 Solution Structure
-- [ ] Create solution `Aide.sln`
-- [ ] Create `Aide.Core` class library (abstractions + core services)
-- [ ] Create `Aide.Api` ASP.NET Core Web API
-- [ ] Create `Aide.Capabilities` class library (built-in capabilities)
-- [ ] Create `Aide.Ui` .NET MAUI app
-- [ ] Configure project references
-- [ ] Set up `.gitignore` for .NET projects
-- [ ] Initialize git repository
+- [x] Create solution `Aide.slnx`
+- [x] Create `Aide.Core` class library (abstractions + core services)
+- [x] Create `Aide.Api` ASP.NET Core Web API
+- [x] Create `Aide.Capabilities` class library (built-in capabilities)
+- [x] Create `Aide.Ui` .NET MAUI app
+- [x] Configure project references
+- [x] Set up `.gitignore` for .NET projects
+- [x] Initialize git repository (GitHub: saib-inc/aide)
 
 **Files to create:**
 ```
@@ -53,12 +53,12 @@ Aide/
 ## Phase 2: Core Abstractions
 
 ### 2.1 Capability Interface
-**File:** `src/Aide.Core/Abstractions/ICapability.cs`
+**Files:** `src/Aide.Core/Abstractions/` (one type per file)
 
-- [ ] Define `ICapability` interface
-- [ ] Define `CapabilityContext` class
-- [ ] Define `CapabilityResult` class
-- [ ] Define `ToolSchema` classes (for LLM tool definitions)
+- [x] Define `ICapability` interface
+- [x] Define `CapabilityContext` class
+- [x] Define `CapabilityResult` class
+- [x] Define `ToolSchema` and `PropertySchema` records
 
 **Interface Definition:**
 ```csharp
@@ -113,14 +113,15 @@ public record PropertySchema(
 **Time estimate:** 45 minutes
 
 ### 2.2 LLM Provider Interface
-**File:** `src/Aide.Core/Abstractions/ILlmProvider.cs`
+**Files:** `src/Aide.Core/Abstractions/` (one type per file)
 
-- [ ] Define `ILlmProvider` interface (multi-provider abstraction)
-- [ ] Define `LlmRequest` class
-- [ ] Define `LlmResponse` class
-- [ ] Define `ToolDefinition` class
-- [ ] Define `ToolCall` class
-- [ ] Define `ToolResult` class
+- [x] Define `ILlmProvider` interface (multi-provider abstraction)
+- [x] Define `LlmRequest` class
+- [x] Define `LlmResponse` class
+- [x] Define `Message` class
+- [x] Define `ToolDefinition` class
+- [x] Define `ToolCall` class
+- [x] Define `ToolResult` class
 
 **Requirements:**
 - Provider-agnostic (works with Claude, GPT, Gemini, etc.)
@@ -130,6 +131,8 @@ public record PropertySchema(
 
 **Time estimate:** 45 minutes
 
+**Note:** All types separated into individual files following "one type per file" convention (added to CONTRIBUTING.md).
+
 ---
 
 ## Phase 3: Core Services
@@ -137,11 +140,14 @@ public record PropertySchema(
 ### 3.1 Capability Registry
 **File:** `src/Aide.Core/Services/CapabilityRegistry.cs`
 
-- [ ] Implement in-memory capability registry
-- [ ] `Register(ICapability)` method
-- [ ] `Get(string name)` method
-- [ ] `GetAll()` method
-- [ ] `ToToolDefinitions()` method (convert capabilities to LLM tools)
+- [x] Implement in-memory capability registry
+- [x] `Register(ICapability)` method (with `RegisterRange()` for batch)
+- [x] `Get(string name)` method (with `TryGet()` variant)
+- [x] `GetAll()` method
+- [x] `ToToolDefinitions()` method (convert capabilities to LLM tools)
+- [x] Additional helper methods: `IsRegistered()`, `Unregister()`, `Clear()`, `Count`
+- [x] Thread-safe implementation with lock
+- [x] Comprehensive error handling and validation
 
 **Time estimate:** 30 minutes
 
@@ -440,6 +446,194 @@ builder.Services.AddScoped<ILlmProvider>(sp =>
   - User transparency (show what Aide did and why)
 
 **Time estimate:** 2 hours
+
+### 3.5 Background Task Queue
+**File:** `src/Aide.Core/Services/BackgroundTaskQueue.cs`
+
+- [ ] Implement simple in-memory task queue using `Channel<T>`
+- [ ] `QueueBackgroundTask(Func<CancellationToken, Task>)` method
+- [ ] Background worker service to process queued tasks
+- [ ] Task status tracking (Running, Completed, Failed)
+- [ ] Cancellation support
+
+**File:** `src/Aide.Core/Abstractions/IBackgroundTask.cs`
+
+Define abstractions for background tasks:
+
+```csharp
+/// <summary>
+/// Represents a task that can run in the background
+/// </summary>
+public interface IBackgroundTask
+{
+    string Id { get; }
+    string Name { get; }
+    TaskStatus Status { get; }
+    DateTime? StartedAt { get; }
+    DateTime? CompletedAt { get; }
+    string? Result { get; }
+    string? Error { get; }
+}
+
+public enum TaskStatus
+{
+    Queued,
+    Running,
+    Completed,
+    Failed,
+    Cancelled
+}
+```
+
+**Implementation Approach:**
+
+```csharp
+public class BackgroundTaskQueue
+{
+    private readonly Channel<BackgroundTaskItem> _queue;
+    private readonly Dictionary<string, BackgroundTaskItem> _tasks = new();
+
+    public BackgroundTaskQueue(int capacity = 100)
+    {
+        var options = new BoundedChannelOptions(capacity)
+        {
+            FullMode = BoundedChannelFullMode.Wait
+        };
+        _queue = Channel.CreateBounded<BackgroundTaskItem>(options);
+    }
+
+    public async Task<string> QueueTaskAsync(
+        string name,
+        Func<CancellationToken, Task<string>> work)
+    {
+        var taskItem = new BackgroundTaskItem
+        {
+            Id = Guid.NewGuid().ToString(),
+            Name = name,
+            Work = work,
+            Status = TaskStatus.Queued,
+            QueuedAt = DateTime.UtcNow
+        };
+
+        _tasks[taskItem.Id] = taskItem;
+        await _queue.Writer.WriteAsync(taskItem);
+        return taskItem.Id;
+    }
+
+    public async Task<BackgroundTaskItem> DequeueAsync(CancellationToken ct)
+    {
+        return await _queue.Reader.ReadAsync(ct);
+    }
+
+    public BackgroundTaskItem? GetTask(string taskId)
+    {
+        return _tasks.GetValueOrDefault(taskId);
+    }
+
+    public IEnumerable<BackgroundTaskItem> GetAllTasks()
+    {
+        return _tasks.Values;
+    }
+}
+
+public class BackgroundTaskItem : IBackgroundTask
+{
+    public required string Id { get; init; }
+    public required string Name { get; init; }
+    public TaskStatus Status { get; set; }
+    public DateTime QueuedAt { get; init; }
+    public DateTime? StartedAt { get; set; }
+    public DateTime? CompletedAt { get; set; }
+    public string? Result { get; set; }
+    public string? Error { get; set; }
+    public required Func<CancellationToken, Task<string>> Work { get; init; }
+}
+```
+
+**Background Worker Service:**
+
+```csharp
+public class BackgroundTaskWorker : BackgroundService
+{
+    private readonly BackgroundTaskQueue _queue;
+    private readonly ILogger<BackgroundTaskWorker> _logger;
+
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        while (!stoppingToken.IsCancellationRequested)
+        {
+            var taskItem = await _queue.DequeueAsync(stoppingToken);
+
+            taskItem.Status = TaskStatus.Running;
+            taskItem.StartedAt = DateTime.UtcNow;
+
+            try
+            {
+                var result = await taskItem.Work(stoppingToken);
+                taskItem.Result = result;
+                taskItem.Status = TaskStatus.Completed;
+            }
+            catch (OperationCanceledException)
+            {
+                taskItem.Status = TaskStatus.Cancelled;
+            }
+            catch (Exception ex)
+            {
+                taskItem.Error = ex.Message;
+                taskItem.Status = TaskStatus.Failed;
+                _logger.LogError(ex, "Background task {TaskId} failed", taskItem.Id);
+            }
+            finally
+            {
+                taskItem.CompletedAt = DateTime.UtcNow;
+            }
+        }
+    }
+}
+```
+
+**Usage Example:**
+
+```csharp
+// Capability can queue long-running work
+var taskId = await _taskQueue.QueueTaskAsync(
+    "Process Large Dataset",
+    async (ct) =>
+    {
+        // Long-running operation
+        await ProcessDataAsync(ct);
+        return "Processing complete";
+    }
+);
+
+// Return task ID to user
+return new CapabilityResult
+{
+    Success = true,
+    Output = $"Task queued with ID: {taskId}. Check status later."
+};
+```
+
+**Use Cases:**
+- Long-running data processing
+- Async email sending
+- Background monitoring (check price every minute)
+- Batch operations
+
+**MVP Limitations:**
+- ❌ No scheduling/cron (just queue and run now)
+- ❌ No persistence (tasks lost on restart)
+- ❌ No recurring tasks
+- ❌ Single worker (no parallelism)
+
+**Post-MVP (Phase 8.6) will add:**
+- ✅ Hangfire or Quartz.NET for scheduling
+- ✅ Persistent task storage
+- ✅ Cron expressions for recurring tasks
+- ✅ Multiple workers
+- ✅ Retry policies
+
+**Time estimate:** 1.5 hours
 
 ---
 
@@ -1096,7 +1290,86 @@ public class PluginLoader
 - [ ] Task management capability
 - [ ] Binance trading capability
 
-### 8.5 Voice Interaction
+### 8.5 Advanced Task Scheduling
+
+Move from simple queue to full-featured task scheduling system.
+
+**Technology:** Hangfire or Quartz.NET
+
+**Features:**
+- [ ] Install Hangfire (recommended) or Quartz.NET
+- [ ] Persistent job storage (PostgreSQL)
+- [ ] Cron-based scheduling (e.g., "0 */5 * * * *" for every 5 minutes)
+- [ ] Recurring task management
+- [ ] Fire-and-forget tasks
+- [ ] Delayed tasks (run in X minutes)
+- [ ] Task retry policies (retry 3 times on failure)
+- [ ] Task history and results
+- [ ] Dashboard UI (Hangfire includes built-in dashboard)
+
+**Hangfire Configuration:**
+
+```csharp
+// Program.cs
+builder.Services.AddHangfire(config =>
+    config.UsePostgreSqlStorage(connectionString));
+
+builder.Services.AddHangfireServer();
+
+// Schedule recurring tasks
+RecurringJob.AddOrUpdate(
+    "check-email",
+    () => CheckEmailAsync(),
+    "*/5 * * * *"  // Every 5 minutes
+);
+
+RecurringJob.AddOrUpdate(
+    "daily-portfolio-summary",
+    () => GeneratePortfolioSummaryAsync(),
+    Cron.Daily
+);
+```
+
+**Capability Integration:**
+
+```csharp
+// Capability can schedule tasks
+public class ScheduleTaskCapability : ICapability
+{
+    public async Task<CapabilityResult> ExecuteAsync(CapabilityContext context)
+    {
+        var cronExpression = context.Parameters["schedule"].ToString();
+        var taskName = context.Parameters["name"].ToString();
+
+        RecurringJob.AddOrUpdate(
+            taskName,
+            () => ExecuteScheduledTaskAsync(taskName),
+            cronExpression
+        );
+
+        return new CapabilityResult
+        {
+            Success = true,
+            Output = $"Task '{taskName}' scheduled with cron: {cronExpression}"
+        };
+    }
+}
+```
+
+**UI for Task Management:**
+- View scheduled tasks
+- Enable/disable tasks
+- View execution history
+- Manually trigger tasks
+- Edit schedules
+
+**Use Cases:**
+- "Check my email every 10 minutes and alert me of important messages"
+- "Monitor BTC price every minute and notify if it drops below $60k"
+- "Generate a daily summary of my Discord mentions at 6pm"
+- "Run my trading strategy every 5 minutes during market hours"
+
+### 8.6 Voice Interaction
 - [ ] Implement `IVoiceProvider` abstraction
 - [ ] Implement `ElevenLabsProvider` for TTS (text-to-speech)
 - [ ] Implement speech-to-text capability (OpenAI Whisper, Azure Speech, etc.)
@@ -1119,7 +1392,7 @@ public class PluginLoader
 - **Google Speech-to-Text** - Multi-language
 - **AssemblyAI** - Developer-friendly
 
-### 8.6 Advanced Features
+### 8.7 Advanced Features
 - [ ] Conversation history persistence
 - [ ] PostgreSQL integration
 - [ ] Vector database for memory
@@ -1147,7 +1420,7 @@ public class PluginLoader
 **Time Breakdown:**
 - Phase 1 (Foundation): 0.5h
 - Phase 2 (Abstractions): 1.5h
-- Phase 3 (Services): 7h
+- Phase 3 (Services): 8.5h (including background task queue)
 - Phase 4 (Capabilities): 0.83h
 - Phase 5 (API): 2.5h
 - Phase 6 (UI): 8-10h
@@ -1159,6 +1432,7 @@ public class PluginLoader
 - Additional LLM providers
 - Real-world capabilities (email, Discord, etc.)
 - Database persistence
+- Advanced task scheduling (Hangfire/Quartz)
 - Advanced UI features
 
 **Success Criteria:**

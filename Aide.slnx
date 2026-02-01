@@ -5,4 +5,7 @@
     <Project Path="src/Aide.Core/Aide.Core.csproj" />
     <Project Path="src/Aide.Ui/Aide.Ui.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Aide.Core.Tests/Aide.Core.Tests.csproj" />
+  </Folder>
 </Solution>

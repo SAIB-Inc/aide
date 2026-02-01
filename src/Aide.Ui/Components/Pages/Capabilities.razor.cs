@@ -1,51 +1,56 @@
-using Aide.Ui.Models;
-using Aide.Ui.Services;
+using Aide.Core.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Logging;
-using MudBlazor;
 
 namespace Aide.Ui.Components.Pages;
 
 public partial class Capabilities
 {
     [Inject]
-    public required AideApiClient ApiClient { get; set; }
+    public required CapabilityRegistry Registry { get; set; }
 
     [Inject]
     public required ILogger<Capabilities> Logger { get; set; }
 
-    [Inject]
-    public required ISnackbar Snackbar { get; set; }
-
-    private List<CapabilityInfo> _capabilities = [];
+    private List<CapabilityDisplay> _capabilities = [];
     private bool _isLoading = true;
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        await LoadCapabilities();
+        LoadCapabilities();
     }
 
-    private async Task LoadCapabilities()
+    private void LoadCapabilities()
     {
         _isLoading = true;
 
         try
         {
-            Logger.LogInformation("Loading capabilities from API");
+            Logger.LogInformation("Loading capabilities from registry");
 
-            var response = await ApiClient.GetCapabilitiesAsync();
-            _capabilities = response.Capabilities;
+            _capabilities = Registry.GetAll()
+                .Select(c => new CapabilityDisplay
+                {
+                    Name = c.Name,
+                    Description = c.Description
+                })
+                .ToList();
 
             Logger.LogInformation("Loaded {Count} capabilities", _capabilities.Count);
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "Error loading capabilities");
-            Snackbar.Add($"Failed to load capabilities: {ex.Message}", Severity.Error);
         }
         finally
         {
             _isLoading = false;
         }
+    }
+
+    private record CapabilityDisplay
+    {
+        public required string Name { get; init; }
+        public required string Description { get; init; }
     }
 }

@@ -1,9 +1,9 @@
+using Aide.Core.Services;
 using Aide.Ui.Models;
 using Aide.Ui.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.Logging;
-using Microsoft.JSInterop;
 using MudBlazor;
 
 namespace Aide.Ui.Components.Pages;
@@ -11,7 +11,7 @@ namespace Aide.Ui.Components.Pages;
 public partial class Home : IDisposable
 {
     [Inject]
-    public required AideApiClient ApiClient { get; set; }
+    public required LlmOrchestrator Orchestrator { get; set; }
 
     [Inject]
     public required ILogger<Home> Logger { get; set; }
@@ -103,20 +103,19 @@ public partial class Home : IDisposable
 
         try
         {
-            Logger.LogInformation("Sending message to API: {Message}", message);
+            var sessionId = AppStateService.CurrentChatId ?? Guid.NewGuid().ToString();
+            Logger.LogInformation("Processing message for session {SessionId}: {Message}", sessionId, message);
 
-            var response = await ApiClient.SendChatMessageAsync(
-                message: message,
-                sessionId: AppStateService.CurrentChatId ?? ""
-            );
+            // Call orchestrator directly instead of going through API
+            var response = await Orchestrator.ProcessUserInput(sessionId, message);
 
-            Logger.LogInformation("Received response from API");
+            Logger.LogInformation("Received response from orchestrator");
 
             var assistantMessage = new ChatMessage
             {
                 Role = "assistant",
-                Content = response.Message,
-                Timestamp = response.Timestamp
+                Content = response,
+                Timestamp = DateTime.Now
             };
 
             // Add to current chat session
@@ -127,10 +126,10 @@ public partial class Home : IDisposable
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Error sending message");
+            Logger.LogError(ex, "Error processing message");
             Snackbar.Add($"Failed to send message: {ex.Message}", Severity.Error);
 
-            // Remove the user message if API call failed
+            // Remove the user message if processing failed
             if (AppStateService.CurrentChatId != null)
             {
                 var currentChat = AppStateService.GetCurrentChat();

@@ -13,13 +13,24 @@ namespace Aide.Core.Providers;
 /// </summary>
 public class ClaudeProvider : ILlmProvider
 {
+    private const string ConfigFileName = "appsettings.json";
+    private const string ConfigDirectory = ".aide";
+
     private readonly AnthropicClient _client;
     private readonly string _model;
 
     public string Name => "Claude";
 
     /// <summary>
-    /// Initialize Claude provider with API key and model
+    /// Initialize Claude provider with automatic configuration loading.
+    /// Checks ANTHROPIC_API_KEY env var, then ~/.aide/appsettings.json
+    /// </summary>
+    public ClaudeProvider() : this(LoadApiKey(), LoadModel())
+    {
+    }
+
+    /// <summary>
+    /// Initialize Claude provider with explicit API key and model
     /// </summary>
     /// <param name="apiKey">Anthropic API key</param>
     /// <param name="model">Model to use (default: claude-sonnet-4-5-20250929)</param>
@@ -29,6 +40,78 @@ public class ClaudeProvider : ILlmProvider
 
         _client = new AnthropicClient(new APIAuthentication(apiKey));
         _model = model ?? AnthropicModels.Claude45Sonnet;
+    }
+
+    /// <summary>
+    /// Load API key from environment variable or config file
+    /// </summary>
+    private static string LoadApiKey()
+    {
+        // Try environment variable first
+        var apiKey = Environment.GetEnvironmentVariable("ANTHROPIC_API_KEY");
+        if (!string.IsNullOrEmpty(apiKey))
+            return apiKey;
+
+        // Try user config file
+        var config = LoadConfigFile();
+        if (config != null &&
+            config.RootElement.TryGetProperty("Aide", out var aide) &&
+            aide.TryGetProperty("Llm", out var llm) &&
+            llm.TryGetProperty("Providers", out var providers) &&
+            providers.TryGetProperty("Claude", out var claude) &&
+            claude.TryGetProperty("ApiKey", out var key))
+        {
+            var keyValue = key.GetString();
+            if (!string.IsNullOrEmpty(keyValue))
+                return keyValue;
+        }
+
+        throw new InvalidOperationException(
+            $"Claude API key not found. Set ANTHROPIC_API_KEY environment variable or add it to ~/{ConfigDirectory}/{ConfigFileName}");
+    }
+
+    /// <summary>
+    /// Load model from config file (optional)
+    /// </summary>
+    private static string? LoadModel()
+    {
+        var config = LoadConfigFile();
+        if (config != null &&
+            config.RootElement.TryGetProperty("Aide", out var aide) &&
+            aide.TryGetProperty("Llm", out var llm) &&
+            llm.TryGetProperty("Providers", out var providers) &&
+            providers.TryGetProperty("Claude", out var claude) &&
+            claude.TryGetProperty("Model", out var model))
+        {
+            return model.GetString();
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Load and parse the config file
+    /// </summary>
+    private static JsonDocument? LoadConfigFile()
+    {
+        var configPath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+            ConfigDirectory,
+            ConfigFileName
+        );
+
+        if (!File.Exists(configPath))
+            return null;
+
+        try
+        {
+            var json = File.ReadAllText(configPath);
+            return JsonDocument.Parse(json);
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     /// <summary>

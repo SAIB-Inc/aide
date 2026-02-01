@@ -1,4 +1,7 @@
-﻿using Aide.Ui.Services;
+using Aide.Capabilities;
+using Aide.Core.Providers;
+using Aide.Core.Services;
+using Aide.Ui.Services;
 using Microsoft.Extensions.Logging;
 using MudBlazor.Services;
 
@@ -29,15 +32,23 @@ public static class MauiProgram
         // Add app state management
         builder.Services.AddSingleton<AppStateService>();
 
-        // Configure HttpClient for API communication
-        // TODO: Make API base URL configurable via settings
-        builder.Services.AddHttpClient<AideApiClient>(client =>
+        // Register Capability Registry with built-in capabilities
+        builder.Services.AddSingleton<CapabilityRegistry>(sp =>
         {
-            // Default to localhost for development
-            // In production, this should be configurable
-            client.BaseAddress = new Uri("http://localhost:5009/");
-            client.Timeout = TimeSpan.FromSeconds(120); // Long timeout for LLM responses
+            var registry = new CapabilityRegistry();
+            registry.Register(new HelloWorldCapability());
+            registry.Register(new SystemInfoCapability());
+            return registry;
         });
+
+        // Register LLM Provider (handles its own configuration)
+        builder.Services.AddSingleton<ClaudeProvider>();
+
+        // Register LLM Orchestrator as singleton to maintain conversation history
+        builder.Services.AddSingleton<LlmOrchestrator>(sp =>
+            new LlmOrchestrator(
+                sp.GetRequiredService<ClaudeProvider>(),
+                sp.GetRequiredService<CapabilityRegistry>()));
 
         return builder.Build();
     }

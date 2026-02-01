@@ -1,0 +1,14 @@
+{
+    "name": "aide-ui",
+    "type": "module",
+    "scripts": {
+        "watch:styles": "tailwindcss -i ./styles/app.css -o ./dist/app.bundle.css --watch",
+        "build:styles": "tailwindcss -i ./styles/app.css -o ./dist/app.bundle.css --minify",
+        "watch": "bun run watch:styles",
+        "build": "bun run build:styles"
+    },
+    "devDependencies": {
+        "@tailwindcss/cli": "^4.1.12",
+        "tailwindcss": "^4.1.12"
+    }
+}

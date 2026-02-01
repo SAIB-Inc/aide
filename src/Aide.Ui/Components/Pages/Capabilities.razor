@@ -1,0 +1,94 @@
+@page "/capabilities"
+
+<div class="h-full overflow-y-auto !bg-[var(--mud-palette-background)] scrollbar-thin">
+    <!-- Header -->
+    <div class="!px-8 !py-5 !border-b !border-[var(--mud-palette-divider)] !bg-[var(--mud-palette-surface)]">
+        <div class="max-w-6xl mx-auto">
+            <MudText Typo="Typo.h5" Class="!font-bold !text-[var(--mud-palette-text-primary)] !text-[20px]">
+                Capabilities
+            </MudText>
+            <MudText Typo="Typo.body2" Class="!text-[var(--mud-palette-text-secondary)] !text-[13px] !mt-0.5">
+                Discover the tools and capabilities Aide can use
+            </MudText>
+        </div>
+    </div>
+
+    <!-- Content -->
+    <div class="!px-8 !py-8">
+        <div class="max-w-6xl mx-auto">
+            @if (_isLoading)
+            {
+                <!-- Loading State -->
+                <div class="flex items-center justify-center !py-24">
+                    <div class="text-center">
+                        <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true" />
+                        <MudText Typo="Typo.body1" Class="!text-[var(--mud-palette-text-secondary)] !mt-6 !text-[15px]">
+                            Loading capabilities...
+                        </MudText>
+                    </div>
+                </div>
+            }
+            else if (_capabilities.Any())
+            {
+                <!-- Capabilities Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 !gap-5">
+                    @foreach (var capability in _capabilities)
+                    {
+                        <MudPaper Elevation="0"
+                                  Class="!rounded-2xl !p-6 !bg-[var(--mud-palette-surface)] !border !border-[var(--mud-palette-divider)] hover:!border-[var(--mud-palette-primary)]/30 hover:!shadow-lg hover:!scale-[1.02] transition-all !duration-200 !cursor-pointer group">
+                            <div class="!mb-4">
+                                <div class="w-12 h-12 !rounded-xl !bg-[var(--mud-palette-primary)]/10 flex items-center justify-center !mb-4 group-hover:!bg-[var(--mud-palette-primary)]/20 transition-colors">
+                                    <MudIcon Icon="@Icons.Material.Filled.Extension"
+                                             Class="!text-[var(--mud-palette-primary)] !text-[24px]" />
+                                </div>
+                                <MudText Typo="Typo.h6" Class="!font-bold !text-[var(--mud-palette-text-primary)] !text-[16px] !mb-1">
+                                    @capability.Name
+                                </MudText>
+                            </div>
+                            <MudText Typo="Typo.body2" Class="!text-[var(--mud-palette-text-secondary)] !leading-relaxed !text-[14px]">
+                                @capability.Description
+                            </MudText>
+                        </MudPaper>
+                    }
+                </div>
+
+                <!-- Summary -->
+                <div class="!mt-10 text-center">
+                    <div class="inline-flex items-center !gap-2 !px-5 !py-2.5 !rounded-full !bg-[var(--mud-palette-surface)] !border !border-[var(--mud-palette-divider)]">
+                        <MudIcon Icon="@Icons.Material.Filled.CheckCircle"
+                                 Class="!text-[var(--mud-palette-success)] !text-[18px]" />
+                        <MudText Typo="Typo.body2" Class="!text-[var(--mud-palette-text-secondary)] !font-medium !text-[14px]">
+                            <span class="!font-bold !text-[var(--mud-palette-primary)]">@_capabilities.Count</span> capability(ies) available
+                        </MudText>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <!-- Empty State -->
+                <div class="flex items-center justify-center !py-24">
+                    <div class="text-center max-w-md">
+                        <div class="w-24 h-24 !rounded-2xl !bg-[var(--mud-palette-warning)]/10 flex items-center justify-center mx-auto !mb-6">
+                            <MudIcon Icon="@Icons.Material.Filled.ExtensionOff"
+                                     Class="!text-[var(--mud-palette-warning)] !text-[48px]" />
+                        </div>
+                        <MudText Typo="Typo.h5" Class="!font-bold !mb-3 !text-[var(--mud-palette-text-primary)] !text-[20px]">
+                            No Capabilities Found
+                        </MudText>
+                        <MudText Typo="Typo.body1" Class="!text-[var(--mud-palette-text-secondary)] !text-[15px] !leading-relaxed">
+                            The API returned no capabilities. Make sure the API server is running.
+                        </MudText>
+
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Primary"
+                                   OnClick="@LoadCapabilities"
+                                   StartIcon="@Icons.Material.Filled.Refresh"
+                                   Class="!mt-6 !rounded-full !normal-case !px-6">
+                            Try Again
+                        </MudButton>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>

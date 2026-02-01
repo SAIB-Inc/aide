@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Aide.Api/Aide.Api.csproj" />
+    <Project Path="src/Aide.Capabilities/Aide.Capabilities.csproj" />
+    <Project Path="src/Aide.Core/Aide.Core.csproj" />
+    <Project Path="src/Aide.Ui/Aide.Ui.csproj" />
+  </Folder>
+</Solution>

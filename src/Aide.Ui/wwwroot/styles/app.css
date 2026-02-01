@@ -1,0 +1,273 @@
+@config "../tailwind.config.js";
+@import "tailwindcss";
+
+/* ============================================
+   Aide UI - Modern Production Styles
+   Following Buriza architecture patterns
+   ============================================ */
+
+/* Root variables for fallbacks */
+:root {
+    --aide-primary: #7C3AED;
+    --aide-primary-light: #A78BFA;
+    --aide-background: #FAFAFA;
+    --aide-surface: #FFFFFF;
+    --aide-text-primary: #18181B;
+    --aide-text-secondary: #71717A;
+}
+
+/* Global typography */
+* {
+    font-family: "Poppins", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* ============================================
+   Scrollbar Styling
+   ============================================ */
+
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--mud-palette-divider, rgba(0, 0, 0, 0.1));
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--mud-palette-text-secondary, rgba(0, 0, 0, 0.2));
+}
+
+/* Thin scrollbar utility */
+.scrollbar-thin::-webkit-scrollbar {
+    width: 4px;
+}
+
+/* ============================================
+   MudBlazor Overrides
+   ============================================ */
+
+/* Drawer transitions */
+.mud-drawer {
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.mud-drawer-content {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Input field cleanup */
+.mud-input-root {
+    transition: all 0.2s ease !important;
+}
+
+.mud-input-underline::before,
+.mud-input-underline::after {
+    border: none !important;
+}
+
+/* Button transitions */
+.mud-button-root {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Paper hover effects */
+.mud-paper {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Icon button sizing consistency */
+.mud-icon-button {
+    transition: all 0.2s ease !important;
+}
+
+/* Nav link hover states */
+.mud-nav-link:hover {
+    transition: all 0.2s ease !important;
+}
+
+/* ============================================
+   Animations
+   ============================================ */
+
+/* Message slide in animation */
+@keyframes messageSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.message-enter {
+    animation: messageSlideIn 0.3s ease-out forwards;
+}
+
+/* Bounce animation for typing indicator */
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-6px);
+    }
+}
+
+.animate-bounce {
+    animation: bounce 0.6s ease-in-out infinite;
+}
+
+/* Fade in animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.3s ease-out forwards;
+}
+
+/* Scale up animation */
+@keyframes scaleUp {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.animate-scale-up {
+    animation: scaleUp 0.2s ease-out forwards;
+}
+
+/* ============================================
+   Utility Classes
+   ============================================ */
+
+/* Glass effect for surfaces */
+.glass-effect {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+/* Smooth transitions for interactive elements */
+.smooth-transition {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Text truncation with ellipsis */
+.text-truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ============================================
+   Focus States
+   ============================================ */
+
+/* Remove default focus outlines, add custom */
+*:focus {
+    outline: none;
+}
+
+*:focus-visible {
+    outline: 2px solid var(--mud-palette-primary, #7C3AED);
+    outline-offset: 2px;
+}
+
+/* ============================================
+   Selection Styling
+   ============================================ */
+
+::selection {
+    background: var(--mud-palette-primary, #7C3AED);
+    color: white;
+}
+
+::-moz-selection {
+    background: var(--mud-palette-primary, #7C3AED);
+    color: white;
+}
+
+/* ============================================
+   Loading States
+   ============================================ */
+
+/* Skeleton loading pulse */
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Spinner animation */
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+/* ============================================
+   Dark Mode Adjustments
+   ============================================ */
+
+/* Ensure proper contrast in dark mode for text on primary bg */
+.dark .text-on-primary {
+    color: var(--mud-palette-primary-contrast-text, #18181B);
+}
+
+/* ============================================
+   Responsive Adjustments
+   ============================================ */
+
+@media (max-width: 768px) {
+    /* Larger touch targets on mobile */
+    .mud-button-root {
+        min-height: 44px;
+    }
+
+    .mud-icon-button {
+        min-width: 44px;
+        min-height: 44px;
+    }
+}
+
+/* ============================================
+   Print Styles
+   ============================================ */
+
+@media print {
+    .no-print {
+        display: none !important;
+    }
+}

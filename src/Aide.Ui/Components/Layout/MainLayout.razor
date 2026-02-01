@@ -1,17 +1,122 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+<MudThemeProvider IsDarkMode="AppStateService.IsDarkMode" Theme="AideTheme" />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
 
-    <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
-        </div>
+<main class="h-screen flex bg-[var(--mud-palette-background)]">
+    <MudDrawerContainer Class="flex-1 flex relative">
+        <MudDrawer @bind-Open="@AppStateService.IsSidebarOpen"
+                   Fixed="false"
+                   Elevation="1"
+                   Variant="@DrawerVariant.Mini"
+                   Breakpoint="Breakpoint.None"
+                   MiniWidth="80px"
+                   Width="260px"
+                   Class="!h-full !shadow-sm !bg-[var(--mud-palette-drawer-background)] !overflow-visible [&_.mud-drawer-content]:!overflow-hidden !rounded-[16px] !py-6 !flex !flex-col [&_.mud-drawer-content]:!flex [&_.mud-drawer-content]:!flex-col [&_.mud-drawer-content]:!justify-between">
 
-        <article class="content px-4">
+            <!-- Toggle Button -->
+            <div class="absolute -right-3 top-8 z-10">
+                <MudIconButton Icon="@Icons.Material.Filled.ChevronLeft"
+                               OnClick="@ToggleSidebar"
+                               Size="Size.Small"
+                               Class="@($"!rounded-full !w-6 !h-6 !min-w-6 !border !border-[var(--mud-palette-divider)] !bg-[var(--mud-palette-surface)] [&_.mud-icon-root]:!text-[16px] [&_.mud-icon-root]:!text-[var(--mud-palette-text-secondary)] [&_.mud-icon-root]:!transition-transform [&_.mud-icon-root]:!duration-300 {(AppStateService.IsSidebarOpen ? "[&_.mud-icon-root]:!rotate-180" : "")}")" />
+            </div>
+
+            <!-- Top Section -->
+            <div>
+                <!-- Logo -->
+                <div class="px-4 flex items-center gap-2 mb-6">
+                    <div class="w-12 h-12 rounded-xl bg-[var(--mud-palette-primary)]/10 flex items-center justify-center flex-shrink-0">
+                        <MudIcon Icon="@Icons.Material.Filled.Psychology"
+                                 Class="!text-[var(--mud-palette-primary)] !text-[32px]" />
+                    </div>
+                    @if (AppStateService.IsSidebarOpen)
+                    {
+                        <MudText Typo="Typo.h5" Class="!text-[var(--mud-palette-text-primary)] !font-bold whitespace-nowrap">
+                            Aide
+                        </MudText>
+                    }
+                </div>
+
+                <!-- New Chat Button -->
+                <div class="px-3 mb-6">
+                    @if (AppStateService.IsSidebarOpen)
+                    {
+                        <MudButton OnClick="@(() => AppStateService.CreateNewChat())"
+                                   Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.Add"
+                                   FullWidth="true"
+                                   Class="!rounded-full !h-11 !normal-case !font-semibold !shadow-none hover:!shadow-md !justify-start !px-4">
+                            New Chat
+                        </MudButton>
+                    }
+                    else
+                    {
+                        <MudIconButton Icon="@Icons.Material.Filled.Add"
+                                       OnClick="@(() => AppStateService.CreateNewChat())"
+                                       Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       Class="!rounded-full !w-12 !h-12 !mx-auto !block" />
+                    }
+                </div>
+
+                <!-- Chat History -->
+                <MudNavMenu Class="mt-2 space-y-1 px-3 [&_.mud-nav-link]:!rounded-full [&_.mud-nav-link]:!min-h-11">
+                    @foreach (var session in AppStateService.ChatSessions.OrderByDescending(s => s.LastMessageAt))
+                    {
+                        var isActive = AppStateService.CurrentChatId == session.Id;
+                        <MudNavLink OnClick="@(() => AppStateService.SelectChat(session.Id))"
+                                    Icon="@Icons.Material.Filled.ChatBubbleOutline"
+                                    Class="@($"!font-medium {(isActive ? "!bg-[var(--mud-palette-primary)] [&_.mud-nav-link-text]:!text-white [&_.mud-icon-root]:!text-white" : "!text-[var(--mud-palette-text-secondary)] hover:!bg-[var(--mud-palette-primary)]/10")}")">
+                            @if (AppStateService.IsSidebarOpen)
+                            {
+                                <span class="truncate">@session.Title</span>
+                            }
+                        </MudNavLink>
+                    }
+                </MudNavMenu>
+            </div>
+
+            <!-- Bottom Section -->
+            <div class="space-y-1 px-3">
+                <MudNavMenu Class="space-y-1 [&_.mud-nav-link]:!rounded-full [&_.mud-nav-link]:!min-h-11">
+                    <MudNavLink Href=""
+                                Match="NavLinkMatch.All"
+                                Icon="@Icons.Material.Filled.Chat"
+                                Class="!text-[var(--mud-palette-text-secondary)] hover:!text-[var(--mud-palette-primary)] hover:!bg-[var(--mud-palette-primary)]/10 !font-medium">
+                        @if (AppStateService.IsSidebarOpen)
+                        {
+                            <span>Chat</span>
+                        }
+                    </MudNavLink>
+
+                    <MudNavLink Href="capabilities"
+                                Icon="@Icons.Material.Filled.Extension"
+                                Class="!text-[var(--mud-palette-text-secondary)] hover:!text-[var(--mud-palette-primary)] hover:!bg-[var(--mud-palette-primary)]/10 !font-medium">
+                        @if (AppStateService.IsSidebarOpen)
+                        {
+                            <span>Capabilities</span>
+                        }
+                    </MudNavLink>
+
+                    <MudNavLink OnClick="@(() => AppStateService.IsDarkMode = !AppStateService.IsDarkMode)"
+                                Icon="@(AppStateService.IsDarkMode ? Icons.Material.Filled.LightMode : Icons.Material.Filled.DarkMode)"
+                                Class="!text-[var(--mud-palette-text-secondary)] hover:!text-[var(--mud-palette-primary)] hover:!bg-[var(--mud-palette-primary)]/10 !font-medium">
+                        @if (AppStateService.IsSidebarOpen)
+                        {
+                            <span>@(AppStateService.IsDarkMode ? "Light Mode" : "Dark Mode")</span>
+                        }
+                    </MudNavLink>
+                </MudNavMenu>
+            </div>
+        </MudDrawer>
+
+        <!-- Main Content -->
+        <div class="flex-1 overflow-hidden">
             @Body
-        </article>
-    </main>
-</div>
+        </div>
+    </MudDrawerContainer>
+</main>

@@ -239,7 +239,160 @@ Aide/
 - **Enterprise-ready** - Active Directory, compliance, deployment tools
 
 ## Getting Started
-*Coming soon - initial setup instructions will be added as the project develops*
+
+### Prerequisites
+
+- **.NET 10 SDK** - [Download here](https://dotnet.microsoft.com/download/dotnet/10.0)
+- **Bun** - [Install from bun.sh](https://bun.sh) (for Tailwind CSS builds)
+- **Anthropic API Key** - [Get from console.anthropic.com](https://console.anthropic.com)
+- **IDE** - Visual Studio 2022, VS Code, or Rider
+
+### Development Setup
+
+#### 1. Clone the Repository
+```bash
+git clone https://github.com/saib-inc/aide
+cd aide
+```
+
+#### 2. Configure API Key
+
+Create a configuration file at `~/.aide/appsettings.json`:
+
+```json
+{
+  "Aide": {
+    "Llm": {
+      "Providers": {
+        "Claude": {
+          "ApiKey": "your-anthropic-api-key-here"
+        }
+      }
+    }
+  }
+}
+```
+
+> **Note:** This file is in your home directory and won't be committed to git. You can also set the API key via environment variable: `ANTHROPIC_API_KEY`
+
+#### 3. Install UI Dependencies
+
+```bash
+cd src/Aide.Ui/wwwroot
+bun install
+cd ../../..
+```
+
+### Running the Project
+
+#### Option A: Run Both API and UI (Recommended)
+
+**Terminal 1 - Start the API:**
+```bash
+dotnet run --project src/Aide.Api/Aide.Api.csproj
+```
+
+The API will start at `http://localhost:5009`
+
+**Terminal 2 - Start the UI:**
+```bash
+dotnet run --project src/Aide.Ui/Aide.Ui.csproj -f net10.0-maccatalyst
+```
+
+> **Note:** Tailwind CSS automatically rebuilds when you build the UI project (configured in `Aide.Ui.csproj`)
+
+#### Option B: Run API Only (for testing)
+
+```bash
+dotnet run --project src/Aide.Api/Aide.Api.csproj
+```
+
+Test the API:
+```bash
+# Get capabilities
+curl http://localhost:5009/api/capabilities
+
+# Send a chat message
+curl -X POST http://localhost:5009/api/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Hello! Can you call hello_world?"}'
+```
+
+#### Option C: Build and Run for Production
+
+```bash
+# Build everything
+dotnet build
+
+# Run API
+dotnet run --project src/Aide.Api/Aide.Api.csproj -c Release
+
+# Run UI
+dotnet run --project src/Aide.Ui/Aide.Ui.csproj -f net10.0-maccatalyst -c Release
+```
+
+### Platform-Specific UI Builds
+
+The UI is built with .NET MAUI and supports multiple platforms:
+
+**macOS (Catalyst):**
+```bash
+dotnet run --project src/Aide.Ui/Aide.Ui.csproj -f net10.0-maccatalyst
+```
+
+**iOS:**
+```bash
+dotnet run --project src/Aide.Ui/Aide.Ui.csproj -f net10.0-ios
+```
+
+**Android:**
+```bash
+dotnet run --project src/Aide.Ui/Aide.Ui.csproj -f net10.0-android
+```
+
+**Windows:**
+```bash
+dotnet run --project src/Aide.Ui/Aide.Ui.csproj -f net10.0-windows10.0.19041.0
+```
+
+### Development Workflow
+
+1. **API Development:**
+   - API auto-reloads with `dotnet watch run --project src/Aide.Api/Aide.Api.csproj`
+   - Add capabilities in `src/Aide.Capabilities/`
+   - Check logs for LLM tool calls and responses
+
+2. **UI Development:**
+   - Tailwind CSS rebuilds automatically on project build
+   - Manual Tailwind rebuild: `cd src/Aide.Ui/wwwroot && bun run build:styles`
+   - UI uses MudBlazor for components + Tailwind for layout
+   - Hot reload: `dotnet watch run --project src/Aide.Ui/Aide.Ui.csproj -f net10.0-maccatalyst`
+
+3. **Testing the Integration:**
+   - Start both API and UI
+   - Open the UI app
+   - Try the sample prompts or type a message
+   - Check API terminal for capability execution logs
+
+### Troubleshooting
+
+**"Failed to load capabilities" in UI:**
+- Make sure the API is running at `http://localhost:5009`
+- Check the API terminal for errors
+
+**"500 Internal Server Error" from API:**
+- Verify your API key is configured in `~/.aide/appsettings.json`
+- Check the API terminal for detailed error messages
+
+**Tailwind styles not applying:**
+- Run `cd src/Aide.Ui/wwwroot && bun run build:styles`
+- Make sure Bun is installed and in your PATH
+
+**UI won't start:**
+- Make sure .NET 10 SDK is installed: `dotnet --version`
+- For macOS: Xcode Command Line Tools required
+- For Android: Android SDK required
+- For iOS: Xcode and provisioning profile required
 
 ## Contributing
 

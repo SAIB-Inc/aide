@@ -1,5 +1,159 @@
-﻿@page "/"
+@page "/"
+@using Aide.Ui.Models
 
-<h1>Hello, world!</h1>
+<div class="h-full flex flex-col !bg-[var(--mud-palette-background)]">
+    <!-- Chat Header -->
+    <div class="!px-8 !py-5 !border-b !border-[var(--mud-palette-divider)] !bg-[var(--mud-palette-surface)]">
+        <div class="max-w-4xl mx-auto flex items-center justify-between">
+            <div>
+                <MudText Typo="Typo.h5" Class="!font-bold !text-[var(--mud-palette-text-primary)] !text-[20px]">
+                    @GetCurrentChatTitle()
+                </MudText>
+                <MudText Typo="Typo.body2" Class="!text-[var(--mud-palette-text-secondary)] !text-[13px] !mt-0.5">
+                    AI Assistant powered by Claude
+                </MudText>
+            </div>
+            <div class="flex items-center !gap-2">
+                <MudText Typo="Typo.caption" Class="!text-[var(--mud-palette-text-secondary)] !text-[12px]">
+                    @_currentMessages.Count messages
+                </MudText>
+            </div>
+        </div>
+    </div>
 
-Welcome to your new app.
+    <!-- Messages Area -->
+    <div class="flex-1 overflow-y-auto !px-8 !py-8 scrollbar-thin" @ref="_messagesContainer">
+        @if (!_currentMessages.Any())
+        {
+            <!-- Empty State -->
+            <div class="h-full flex items-center justify-center">
+                <div class="text-center max-w-lg">
+                    <div class="w-32 h-32 !rounded-3xl !bg-[var(--mud-palette-primary)]/10 flex items-center justify-center mx-auto !mb-8">
+                        <MudIcon Icon="@Icons.Material.Filled.Psychology"
+                                 Class="!text-[var(--mud-palette-primary)] !text-[64px]" />
+                    </div>
+
+                    <MudText Typo="Typo.h3" Class="!font-bold !mb-4 !text-[var(--mud-palette-text-primary)] !text-[32px]">
+                        How can I help you today?
+                    </MudText>
+
+                    <MudText Typo="Typo.body1" Class="!text-[var(--mud-palette-text-secondary)] !leading-relaxed !mb-10 !text-[16px]">
+                        I'm Aide, your AI assistant. I can use various capabilities to help you with tasks, answer questions, and more.
+                    </MudText>
+
+                    <!-- Suggestion Chips -->
+                    <div class="flex flex-wrap justify-center !gap-3">
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Default"
+                                   OnClick="@(() => SendSuggestion("Tell me a joke"))"
+                                   Class="!rounded-full !normal-case !px-5 !h-10 !border-[var(--mud-palette-divider)] !text-[var(--mud-palette-text-secondary)] hover:!border-[var(--mud-palette-primary)] hover:!text-[var(--mud-palette-primary)] hover:!bg-[var(--mud-palette-primary)]/5">
+                            Tell me a joke
+                        </MudButton>
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Default"
+                                   OnClick="@(() => SendSuggestion("What capabilities do you have?"))"
+                                   Class="!rounded-full !normal-case !px-5 !h-10 !border-[var(--mud-palette-divider)] !text-[var(--mud-palette-text-secondary)] hover:!border-[var(--mud-palette-primary)] hover:!text-[var(--mud-palette-primary)] hover:!bg-[var(--mud-palette-primary)]/5">
+                            Show capabilities
+                        </MudButton>
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Default"
+                                   OnClick="@(() => SendSuggestion("Get system information"))"
+                                   Class="!rounded-full !normal-case !px-5 !h-10 !border-[var(--mud-palette-divider)] !text-[var(--mud-palette-text-secondary)] hover:!border-[var(--mud-palette-primary)] hover:!text-[var(--mud-palette-primary)] hover:!bg-[var(--mud-palette-primary)]/5">
+                            System info
+                        </MudButton>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <!-- Message List -->
+            <div class="!space-y-6 max-w-4xl mx-auto">
+                @foreach (var message in _currentMessages)
+                {
+                    var isUser = message.Role == "user";
+                    <div class="flex !gap-4 message-enter @(isUser ? "flex-row-reverse" : "")">
+                        <!-- Avatar -->
+                        <div class="flex-shrink-0">
+                            <div class="w-10 h-10 !rounded-xl flex items-center justify-center @(isUser ? "!bg-[var(--mud-palette-primary)]" : "!bg-[var(--mud-palette-primary)]/10")">
+                                <MudIcon Icon="@(isUser ? Icons.Material.Filled.Person : Icons.Material.Filled.Psychology)"
+                                         Class="@($"{(isUser ? "!text-white" : "!text-[var(--mud-palette-primary)]")} !text-[20px]")" />
+                            </div>
+                        </div>
+
+                        <!-- Message Content -->
+                        <div class="flex-1 min-w-0 @(isUser ? "flex flex-col items-end" : "")">
+                            <div class="!mb-1.5 flex items-center !gap-2 @(isUser ? "flex-row-reverse" : "")">
+                                <MudText Typo="Typo.body2" Class="!font-semibold !text-[var(--mud-palette-text-primary)] !text-[13px]">
+                                    @(isUser ? "You" : "Aide")
+                                </MudText>
+                                <MudText Typo="Typo.caption" Class="!text-[var(--mud-palette-text-secondary)] !text-[11px]">
+                                    @message.Timestamp.ToString("h:mm tt")
+                                </MudText>
+                            </div>
+
+                            <MudPaper Elevation="0"
+                                      Class="@($"!p-4 !rounded-2xl max-w-[85%] {(isUser ? "!bg-[var(--mud-palette-primary)] !text-white !rounded-tr-md" : "!bg-[var(--mud-palette-surface)] !border !border-[var(--mud-palette-divider)] !rounded-tl-md")}")">
+                                <MudText Typo="Typo.body1" Class="whitespace-pre-wrap !leading-relaxed !text-[15px]">
+                                    @message.Content
+                                </MudText>
+                            </MudPaper>
+                        </div>
+                    </div>
+                }
+
+                <!-- Typing Indicator -->
+                @if (_isLoading)
+                {
+                    <div class="flex !gap-4 message-enter">
+                        <div class="w-10 h-10 !rounded-xl !bg-[var(--mud-palette-primary)]/10 flex items-center justify-center flex-shrink-0">
+                            <MudIcon Icon="@Icons.Material.Filled.Psychology" Class="!text-[var(--mud-palette-primary)] !text-[20px]" />
+                        </div>
+                        <div class="!pt-3">
+                            <div class="flex !gap-1.5">
+                                <div class="w-2 h-2 !bg-[var(--mud-palette-primary)] !rounded-full animate-bounce"></div>
+                                <div class="w-2 h-2 !bg-[var(--mud-palette-primary)] !rounded-full animate-bounce [animation-delay:0.15s]"></div>
+                                <div class="w-2 h-2 !bg-[var(--mud-palette-primary)] !rounded-full animate-bounce [animation-delay:0.3s]"></div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+    <!-- Input Area (Floating) -->
+    <div class="!px-8 !pb-6 !pt-4 !bg-[var(--mud-palette-background)]">
+        <div class="max-w-4xl mx-auto">
+            <MudPaper Elevation="2" Class="!rounded-2xl !p-3 !bg-[var(--mud-palette-surface)] !border !border-[var(--mud-palette-divider)]">
+                <div class="flex items-end !gap-3">
+                    <MudTextField @bind-Value="_userInput"
+                                  Placeholder="Message Aide..."
+                                  Variant="Variant.Text"
+                                  Disabled="@_isLoading"
+                                  OnKeyDown="@HandleKeyDown"
+                                  Immediate="true"
+                                  Lines="1"
+                                  AutoGrow="true"
+                                  MaxLines="6"
+                                  Class="flex-1 [&_.mud-input-root]:!border-none [&_.mud-input-root]:!shadow-none [&_.mud-input]:!text-[15px] [&_.mud-input-slot]:!py-2"
+                                  InputMode="InputMode.text" />
+
+                    <MudIconButton Icon="@Icons.Material.Filled.Send"
+                                   OnClick="@SendMessage"
+                                   Disabled="@(string.IsNullOrWhiteSpace(_userInput) || _isLoading)"
+                                   Color="Color.Primary"
+                                   Variant="Variant.Filled"
+                                   Class="!rounded-xl !w-11 !h-11 !mb-0.5" />
+                </div>
+            </MudPaper>
+
+            <!-- Input Hint -->
+            <div class="!mt-2.5 flex items-center justify-center">
+                <MudText Typo="Typo.caption" Class="!text-[var(--mud-palette-text-secondary)] !text-[11px]">
+                    Press Enter to send, Shift+Enter for new line
+                </MudText>
+            </div>
+        </div>
+    </div>
+</div>

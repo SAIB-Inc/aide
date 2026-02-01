@@ -3,28 +3,57 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <title>Aide.Ui</title>
+    <title>Aide</title>
     <base href="/" />
-    <link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="app.css" />
-    <link rel="stylesheet" href="Aide.Ui.styles.css" />
-    <link rel="icon" href="data:,">
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- MudBlazor CSS -->
+    <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
+
+    <!-- Tailwind CSS -->
+    <link href="dist/app.bundle.css" rel="stylesheet" />
+
+    <style>
+        /* Loading screen styles */
+        #app {
+            background: #FAFAFA;
+            font-family: "Poppins", system-ui, sans-serif;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            #app {
+                background: #0A0A0B;
+            }
+            #app .loading-text {
+                color: #FAFAFA;
+            }
+            #app .loading-spinner {
+                border-color: #27272A;
+                border-top-color: #A78BFA;
+            }
+        }
+    </style>
 </head>
 
 <body>
-
-    <div class="status-bar-safe-area"></div>
-
-    <div id="app">Loading...</div>
-
-    <div id="blazor-error-ui" data-nosnippet>
-        An unhandled error has occurred.
-        <a href="." class="reload">Reload</a>
-        <span class="dismiss">🗙</span>
+    <div id="app" class="h-screen flex flex-col">
+        <div class="flex-1 flex items-center justify-center">
+            <div class="text-center">
+                <div class="loading-spinner inline-block w-12 h-12 border-4 border-[#E4E4E7] border-t-[#7C3AED] rounded-full animate-spin"></div>
+                <p class="loading-text mt-4 text-[#18181B] font-medium">Loading Aide...</p>
+            </div>
+        </div>
     </div>
 
+    <div id="blazor-error-ui" class="hidden fixed bottom-0 left-0 right-0 bg-red-50 text-red-600 p-4 border-t border-red-200">
+        An unhandled error has occurred.
+        <a href="" class="reload ml-4 underline">Reload</a>
+        <a class="dismiss ml-4 cursor-pointer">Dismiss</a>
+    </div>
+
+    <script src="_content/MudBlazor/MudBlazor.min.js"></script>
     <script src="_framework/blazor.webview.js" autostart="false"></script>
-
 </body>
-
 </html>

@@ -58,13 +58,24 @@
     </ItemGroup>
 
     <ItemGroup>
+        <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.2" />
         <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
         <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="$(MauiVersion)" />
         <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
+        <PackageReference Include="MudBlazor" Version="8.15.0" />
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\Aide.Core\Aide.Core.csproj" />
     </ItemGroup>
+
+    <!-- Auto-build Tailwind CSS before compilation -->
+    <Target Name="BuildTailwindCss" BeforeTargets="BeforeBuild">
+        <Message Text="Building Tailwind CSS..." Importance="high" />
+        <Exec Command="bun run build:styles"
+              WorkingDirectory="$(MSBuildProjectDirectory)/wwwroot"
+              IgnoreExitCode="false"
+              ContinueOnError="false" />
+    </Target>
 
 </Project>
